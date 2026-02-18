@@ -1,65 +1,197 @@
-import Image from "next/image";
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { getSupabase } from "@/src/lib/supabaseClient";
+import Section from "@/app/components/ui/Section";
+import Button from "@/app/components/ui/Button";
+import Card from "@/app/components/ui/Card";
+import PageHeader from "@/app/components/ui/PageHeader";
+import PageLayout from "@/app/components/ui/PageLayout";
+import MatchDropCountdown from "@/app/components/MatchDropCountdown";
+import { colors, typography, gradients } from "@/app/styles/design-tokens";
+
+const INVITE_STORAGE_KEY = "pegasus_pair_invite_code";
+
+function HomeContent() {
+  const searchParams = useSearchParams();
+  const inviteParam = searchParams.get("invite");
+  const [inviteValid, setInviteValid] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!inviteParam?.trim()) {
+      setInviteValid(false);
+      return;
+    }
+    const code = inviteParam.trim();
+    getSupabase()
+      .from("invites")
+      .select("code")
+      .eq("code", code)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error || !data) {
+          setInviteValid(false);
+          return;
+        }
+        setInviteValid(true);
+        try {
+          window.sessionStorage.setItem(INVITE_STORAGE_KEY, code);
+        } catch {
+          // ignore
+        }
+      });
+  }, [inviteParam]);
+
+  return (
+    <PageLayout>
+      <div
+        style={{
+          paddingTop: "clamp(4.25rem, 8vh, 6rem)",
+          paddingLeft: "clamp(1rem, 4vw, 2rem)",
+          paddingRight: "clamp(1rem, 4vw, 2rem)",
+          overflow: "visible",
+        }}
+      >
+        <Section style={{ paddingTop: 0, overflow: "visible" }}>
+          <PageHeader
+            title={
+              <h1
+                className="text-center font-bold"
+                style={{
+                  fontFamily: typography.fontSerif,
+                  fontSize: "clamp(3.25rem, 10vw, 6.5rem)",
+                  lineHeight: 1.16,
+                  letterSpacing: "-0.02em",
+                  maxWidth: "14ch",
+                  marginInline: "auto",
+                  marginTop: "-0.3rem",
+                  paddingTop: "0.06em",
+                  paddingBottom: "0.08em",
+                  background: gradients.heroTitle,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  filter: "drop-shadow(0 0 1px rgba(0,0,0,0.1))",
+                }}
+              >
+                Pegasus Pair
+              </h1>
+            }
+            subtitle={
+              <p
+                className="text-center text-lg"
+                style={{ color: colors.mutedForeground, maxWidth: "42rem", margin: "0 auto" }}
+              >
+                Because the right match is worth waiting for.
+              </p>
+            }
+          />
+
+        <MatchDropCountdown />
+
+        {inviteValid === true && (
+          <div
+            className="mb-10 rounded-2xl border px-6 py-4"
+            style={{
+              borderColor: "rgba(34, 197, 94, 0.4)",
+              backgroundColor: "rgba(34, 197, 94, 0.1)",
+            }}
+          >
+            <p className="text-center text-sm" style={{ color: "#86efac" }}>
+              You were invited — create your UCF account to join.{" "}
+              <Link href="/login" className="font-medium underline" style={{ color: "#86efac" }}>
+                Sign up
+              </Link>
+            </p>
+          </div>
+        )}
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Button href="/survey" size="lg">
+            Take the Survey
+          </Button>
+          <Button variant="secondary" href="/matches" size="lg">
+            See Matches
+          </Button>
+        </div>
+
+        <div className="mt-16 space-y-6" style={{ maxWidth: "40rem", margin: "2rem auto 0" }}>
+          {[
+            {
+              step: 1,
+              title: "Sign in with your UCF email",
+              body: "We verify you're a Knight to keep the community authentic",
+            },
+            {
+              step: 2,
+              title: "Take a quick survey",
+              body: "Answer questions about your interests, schedule, and what you're looking for",
+            },
+            {
+              step: 3,
+              title: "See your matches",
+              body: "Discover students with similar vibes, majors, or schedules",
+            },
+          ].map(({ step, title, body }) => (
+            <div
+              key={step}
+              className="rounded-2xl border p-6"
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+              }}
+            >
+              <div className="flex gap-4">
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium"
+                  style={{
+                    background: "rgba(244, 63, 94, 0.2)",
+                    color: colors.primary,
+                    border: "1px solid rgba(244, 63, 94, 0.3)",
+                  }}
+                >
+                  {step}
+                </span>
+                <div>
+                  <h3 className="mb-1 font-medium" style={{ color: colors.foreground }}>
+                    {title}
+                  </h3>
+                  <p style={{ color: colors.mutedForeground }}>{body}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        </Section>
+      </div>
+    </PageLayout>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <Suspense
+      fallback={
+        <PageLayout>
+          <Section>
+            <h1
+              className="text-center font-bold"
+              style={{ fontFamily: typography.fontSerif, color: colors.foreground }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              Pegasus Pair
+            </h1>
+            <p className="text-center" style={{ color: colors.mutedForeground }}>
+              Loading…
+            </p>
+          </Section>
+        </PageLayout>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }
