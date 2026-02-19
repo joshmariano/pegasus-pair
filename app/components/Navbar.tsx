@@ -75,14 +75,18 @@ export default function Navbar() {
         </Link>
 
         <div
-          className="flex flex-wrap max-w-full gap-2 sm:gap-3"
           style={{
             display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: "0.5rem",
             flexWrap: "wrap",
             maxWidth: "100%",
-            rowGap: "0.5rem",
-            alignItems: "center",
+            minWidth: 0,
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
           }}
+          className="max-w-full flex flex-wrap gap-2 sm:gap-3 overflow-x-auto"
         >
           {NAV_LINKS.map(({ href, label }) => {
             const isActive = pathname === href;
@@ -92,6 +96,8 @@ export default function Navbar() {
                 href={href}
                 style={{
                   padding: "0.5rem 0.75rem",
+                  whiteSpace: "nowrap",
+                  flex: "0 0 auto",
                   borderRadius: radius.lg,
                   textDecoration: "none",
                   fontSize: typography.fontSize.sm,
