@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabase } from "@/src/lib/supabaseClient";
 import { useUser } from "@/src/lib/useUser";
 import Section from "@/app/components/ui/Section";
@@ -11,6 +11,7 @@ import Card from "@/app/components/ui/Card";
 import PageHeader from "@/app/components/ui/PageHeader";
 import PageLayout from "@/app/components/ui/PageLayout";
 import { colors, typography } from "@/app/styles/design-tokens";
+import { getSiteUrl, AUTH_CALLBACK_PATH } from "@/app/lib/siteUrl";
 
 const UCF_EMAIL_SUFFIX = "@ucf.edu";
 
@@ -26,14 +27,37 @@ const labelStyle = {
   color: colors.mutedForeground,
 };
 
-export default function LoginPage() {
+const PP_NEXT_PATH_KEY = "pp_next_path";
+
+/** Allow only relative app paths (no open redirect). Returns path or "". */
+function safeNextPath(next: string | null | undefined): string {
+  if (!next || typeof next !== "string") return "";
+  const path = next.trim();
+  if (path.startsWith("/") && !path.startsWith("//")) return path;
+  return "";
+}
+
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextParam = searchParams.get("next");
+  const nextPath = safeNextPath(nextParam);
   const { user, loading: authLoading } = useUser();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Persist next across email verification so /auth/callback can redirect there
+  useEffect(() => {
+    if (typeof window === "undefined" || !nextPath) return;
+    try {
+      window.sessionStorage.setItem(PP_NEXT_PATH_KEY, nextPath);
+    } catch {
+      // ignore
+    }
+  }, [nextPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +80,11 @@ export default function LoginPage() {
         if (err) throw err;
         userId = data.user?.id;
       } else {
+        const redirectTo = getSiteUrl() ? `${getSiteUrl()}${AUTH_CALLBACK_PATH}` : undefined;
         const { data, error: err } = await supabase.auth.signUp({
           email: email.trim().toLowerCase(),
           password,
+          options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
         });
         if (err) throw err;
         userId = data.user?.id;
@@ -72,20 +98,20 @@ export default function LoginPage() {
           }
         }
       }
-      if (userId) {
+      let destination: string;
+      if (nextPath) {
+        destination = nextPath;
+      } else if (userId) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("user_id")
           .eq("user_id", userId)
           .maybeSingle();
-        if (!profile) {
-          router.push("/profile");
-        } else {
-          router.push("/survey");
-        }
+        destination = !profile ? "/profile" : "/survey";
       } else {
-        router.push("/survey");
+        destination = "/survey";
       }
+      router.push(destination);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -201,5 +227,21 @@ export default function LoginPage() {
         </Card>
       </Section>
     </PageLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageLayout>
+          <Section maxWidth="28rem">
+            <p className="text-center text-base" style={{ color: colors.mutedForeground }}>Loading…</p>
+          </Section>
+        </PageLayout>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

@@ -74,6 +74,9 @@ export default function MatchDropCountdown() {
           marginBottom: spacing.xl,
           paddingLeft: spacing.md,
           paddingRight: spacing.md,
+          width: "min(92vw, 38rem)",
+          maxWidth: "100%",
+          boxSizing: "border-box",
         }}
       >
         <div
@@ -81,7 +84,7 @@ export default function MatchDropCountdown() {
             position: "relative",
             width: "100%",
             maxWidth: "38rem",
-            minWidth: "min(100%, 20rem)",
+            minWidth: 0,
             background: colors.surfaceStrong,
             border: `1px solid ${colors.borderStrong}`,
             borderRadius: radius.card,
@@ -89,6 +92,7 @@ export default function MatchDropCountdown() {
             WebkitBackdropFilter: "blur(16px)",
             boxShadow: shadow.clockWidget,
             padding: spacing.xl,
+            overflow: "hidden",
           }}
         >
           <div className="clock-widget-glow" aria-hidden />
@@ -133,12 +137,21 @@ export default function MatchDropCountdown() {
     return (
       <div
         className="flex flex-col items-center"
-        style={{ marginTop: spacing.xl, marginBottom: spacing.xl, paddingLeft: spacing.md, paddingRight: spacing.md }}
+        style={{
+          marginTop: spacing.xl,
+          marginBottom: spacing.xl,
+          paddingLeft: spacing.md,
+          paddingRight: spacing.md,
+          width: "min(92vw, 38rem)",
+          maxWidth: "100%",
+          boxSizing: "border-box",
+        }}
       >
         <div
           style={{
             width: "100%",
             maxWidth: "38rem",
+            minWidth: 0,
             background: colors.surfaceStrong,
             border: `1px solid ${colors.borderStrong}`,
             borderRadius: radius.card,
@@ -164,6 +177,9 @@ export default function MatchDropCountdown() {
         marginBottom: spacing.xl,
         paddingLeft: spacing.md,
         paddingRight: spacing.md,
+        width: "min(92vw, 38rem)",
+        maxWidth: "100%",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -171,7 +187,7 @@ export default function MatchDropCountdown() {
           position: "relative",
           width: "100%",
           maxWidth: "38rem",
-          minWidth: "min(100%, 20rem)",
+          minWidth: 0,
           background: colors.surfaceStrong,
           border: `1px solid ${colors.borderStrong}`,
           borderRadius: radius.card,
@@ -179,6 +195,7 @@ export default function MatchDropCountdown() {
           WebkitBackdropFilter: "blur(16px)",
           boxShadow: shadow.clockWidget,
           padding: spacing.xl,
+          overflow: "hidden",
         }}
       >
         <div className="clock-widget-glow" aria-hidden />
@@ -203,8 +220,8 @@ export default function MatchDropCountdown() {
               alignItems: "baseline",
               justifyContent: "center",
               width: "100%",
-              overflow: "visible",
               minWidth: 0,
+              maxWidth: "100%",
             }}
           >
             <span
@@ -212,7 +229,7 @@ export default function MatchDropCountdown() {
                 fontFamily: typography.fontFamilyClock,
                 fontVariantNumeric: "tabular-nums",
                 fontWeight: typography.fontWeight.semibold,
-                fontSize: "clamp(2.1rem, 5.5vw, 4.2rem)",
+                fontSize: "clamp(1.6rem, 5vw, 4rem)",
                 color: colors.foreground,
                 whiteSpace: "nowrap",
                 display: "inline-flex",

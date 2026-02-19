@@ -52,19 +52,21 @@ function HomeContent() {
           paddingLeft: "clamp(1rem, 4vw, 2rem)",
           paddingRight: "clamp(1rem, 4vw, 2rem)",
           overflow: "visible",
+          maxWidth: "100%",
+          boxSizing: "border-box",
         }}
       >
-        <Section style={{ paddingTop: 0, overflow: "visible" }}>
+        <Section style={{ paddingTop: 0, overflow: "visible", maxWidth: "100%" }}>
           <PageHeader
             title={
               <h1
                 className="text-center font-bold"
                 style={{
                   fontFamily: typography.fontSerif,
-                  fontSize: "clamp(3.25rem, 10vw, 6.5rem)",
+                  fontSize: "clamp(2.5rem, 8vw, 6.5rem)",
                   lineHeight: 1.16,
                   letterSpacing: "-0.02em",
-                  maxWidth: "14ch",
+                  maxWidth: "min(14ch, 92vw)",
                   marginInline: "auto",
                   marginTop: "-0.3rem",
                   paddingTop: "0.06em",

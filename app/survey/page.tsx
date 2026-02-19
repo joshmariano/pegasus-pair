@@ -30,6 +30,14 @@ export default function SurveyPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.replace("/login?next=/survey");
+      return;
+    }
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
     if (authLoading || !user) return;
     getSupabase()
       .from("profiles")
@@ -97,6 +105,16 @@ export default function SurveyPage() {
     setSubmitted(true);
     setSubmitState("idle");
   };
+
+  if (!authLoading && !user) {
+    return (
+      <PageLayout>
+        <Section>
+          <p className="text-center text-base" style={{ color: colors.mutedForeground }}>Redirecting…</p>
+        </Section>
+      </PageLayout>
+    );
+  }
 
   if (authLoading || loadState === "loading") {
     return (

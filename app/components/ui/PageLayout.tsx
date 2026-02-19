@@ -13,13 +13,6 @@ type Props = {
   glowTopRight?: boolean;
 };
 
-const glowLayerStyle: React.CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  zIndex: 0,
-  pointerEvents: "none",
-};
-
 export default function PageLayout({
   children,
   className = "",
@@ -33,86 +26,108 @@ export default function PageLayout({
       style={{
         minHeight: "100vh",
         position: "relative",
-        overflow: "visible",
+        overflowX: "hidden",
+        overflowY: "visible",
         background: colors.backgroundBase,
       }}
     >
-      {/* B) Dominant warm color wash */}
+      {/* Glow layers: overflow-hidden wrapper + pointer-events: none to avoid scroll/zoom glitches */}
       <div
         aria-hidden
         style={{
-          ...glowLayerStyle,
-          background: gradients.colorWash,
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          overflow: "hidden",
+          pointerEvents: "none",
         }}
-      />
-      {/* C) Hero center glow (always) */}
-      <div
-        aria-hidden
-        style={{
-          ...glowLayerStyle,
-          background: gradients.heroGlowCenter,
-        }}
-      />
-      {/* D) Radial glows – top, right, left */}
-      {glow && (
-        <>
+      >
+        {/* B) Dominant warm color wash */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: gradients.colorWash,
+          }}
+        />
+        {/* C) Hero center glow (always) */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: gradients.heroGlowCenter,
+          }}
+        />
+        {/* D) Radial glows – top, right, left */}
+        {glow && (
+          <>
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: gradients.glowTop,
+              }}
+            />
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: gradients.glowRight,
+              }}
+            />
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: gradients.glowLeft,
+              }}
+            />
+          </>
+        )}
+        {glowTopRight && (
           <div
             aria-hidden
             style={{
-              ...glowLayerStyle,
-              background: gradients.glowTop,
-            }}
-          />
-          <div
-            aria-hidden
-            style={{
-              ...glowLayerStyle,
+              position: "absolute",
+              inset: 0,
               background: gradients.glowRight,
             }}
           />
+        )}
+        {(glowBottomLeft ?? false) && (
           <div
             aria-hidden
             style={{
-              ...glowLayerStyle,
-              background: gradients.glowLeft,
+              position: "absolute",
+              inset: 0,
+              background: gradients.glowBottom,
             }}
           />
-        </>
-      )}
-      {glowTopRight && (
+        )}
+        {/* E) Light dark overlay (readability, less dominance) */}
         <div
           aria-hidden
           style={{
-            ...glowLayerStyle,
-            background: gradients.glowRight,
+            position: "absolute",
+            inset: 0,
+            background: gradients.pageBackground,
           }}
         />
-      )}
-      {(glowBottomLeft ?? false) && (
+        {/* F) Subtle vignette only */}
         <div
           aria-hidden
           style={{
-            ...glowLayerStyle,
-            background: gradients.glowBottom,
+            position: "absolute",
+            inset: 0,
+            background: gradients.vignette,
           }}
         />
-      )}
-      {/* E) Light dark overlay (readability, less dominance) */}
-      <div
-        aria-hidden
-        style={{
-          ...glowLayerStyle,
-          background: gradients.pageBackground,
-        }}
-      />
-      {/* F) Subtle vignette only */}
-      <div
-        aria-hidden
-        style={{
-          ...glowLayerStyle,
-          background: gradients.vignette,
-        }}
-      />
+      </div>
       {/* Content */}
       <div
         style={{

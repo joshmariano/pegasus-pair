@@ -16,6 +16,11 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Environment
+
+- Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- **Optional:** Set `NEXT_PUBLIC_SITE_URL` to your app’s public URL (e.g. `https://yourapp.vercel.app`). This is used for auth email redirects and invite links. If unset, the client falls back to `window.location.origin`. In production you should set it so email magic links and confirmations redirect to the correct origin.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

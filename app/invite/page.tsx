@@ -11,6 +11,7 @@ import PageHeader from "@/app/components/ui/PageHeader";
 import PageLayout from "@/app/components/ui/PageLayout";
 import { colors, typography } from "@/app/styles/design-tokens";
 import { getInviteProgress } from "@/app/lib/matchRewards";
+import { getSiteUrl } from "@/app/lib/siteUrl";
 
 function randomCode(length: number): string {
   const chars = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -97,7 +98,7 @@ export default function InvitePage() {
     );
   }
 
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const siteUrl = getSiteUrl();
   const successfulInvites = invites.reduce((sum, inv) => sum + inv.uses, 0);
   const progress = getInviteProgress(successfulInvites);
 
@@ -148,7 +149,7 @@ export default function InvitePage() {
             <ul className="flex flex-col gap-4">
               {invites.map((inv) => (
                 <Card key={inv.code} glow>
-                  <p className="font-mono text-sm" style={{ color: colors.foreground }}>{baseUrl}/?invite={inv.code}</p>
+                  <p className="font-mono text-sm" style={{ color: colors.foreground }}>{siteUrl}/?invite={inv.code}</p>
                   <p className="mt-2 text-sm" style={{ color: colors.mutedForeground }}>{inv.uses} {inv.uses === 1 ? "use" : "uses"}</p>
                 </Card>
               ))}
