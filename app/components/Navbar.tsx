@@ -74,7 +74,16 @@ export default function Navbar() {
           Pegasus Pair
         </Link>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+        <div
+          className="flex flex-wrap max-w-full gap-2 sm:gap-3"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            maxWidth: "100%",
+            rowGap: "0.5rem",
+            alignItems: "center",
+          }}
+        >
           {NAV_LINKS.map(({ href, label }) => {
             const isActive = pathname === href;
             return (
@@ -82,7 +91,7 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 style={{
-                  padding: "0.5rem 1rem",
+                  padding: "0.5rem 0.75rem",
                   borderRadius: radius.lg,
                   textDecoration: "none",
                   fontSize: typography.fontSize.sm,

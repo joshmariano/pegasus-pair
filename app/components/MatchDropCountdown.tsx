@@ -222,6 +222,7 @@ export default function MatchDropCountdown() {
               width: "100%",
               minWidth: 0,
               maxWidth: "100%",
+              whiteSpace: "nowrap",
             }}
           >
             <span

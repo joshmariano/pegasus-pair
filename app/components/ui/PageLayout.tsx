@@ -28,6 +28,7 @@ export default function PageLayout({
         position: "relative",
         overflowX: "hidden",
         overflowY: "visible",
+        maxWidth: "100%",
         background: colors.backgroundBase,
       }}
     >
