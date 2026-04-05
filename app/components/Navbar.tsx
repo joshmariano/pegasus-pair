@@ -135,8 +135,9 @@ export default function Navbar() {
 
   return (
     <nav
+      className="navbar-root"
       style={{
-        paddingTop: "env(safe-area-inset-top)",
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.5rem)",
         borderBottom: isHome
           ? "1px solid rgba(255,255,255,0.10)"
           : `1px solid ${colors.border}`,
@@ -175,9 +176,7 @@ export default function Navbar() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          height: scrolled
-            ? "calc(3.25rem + env(safe-area-inset-top))"
-            : "calc(4rem + env(safe-area-inset-top))",
+          height: scrolled ? "3.25rem" : "4rem",
         }}
       >
         <Link

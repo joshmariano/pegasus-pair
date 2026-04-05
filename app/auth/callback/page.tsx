@@ -60,6 +60,8 @@ export default function AuthCallbackPage() {
             setErrorText(exErr.message);
             return;
           }
+          // Clear one-time code from URL so refresh doesn’t retry a stale code
+          window.history.replaceState(null, "", `${url.pathname}${url.hash}`);
         } else if (tokenHash && otpType) {
           const { error: otpErr } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
@@ -84,6 +86,7 @@ export default function AuthCallbackPage() {
               setErrorText(setErr.message);
               return;
             }
+            window.history.replaceState(null, "", url.pathname);
           }
         }
       } catch {
@@ -122,6 +125,7 @@ export default function AuthCallbackPage() {
           }
           destination = nextPath || "/survey";
         }
+        router.refresh();
         router.replace(destination);
       } else {
         setStatus("error");

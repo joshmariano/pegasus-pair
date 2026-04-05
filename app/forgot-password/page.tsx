@@ -10,7 +10,7 @@ import PageHeader from "@/app/components/ui/PageHeader";
 import PageLayout from "@/app/components/ui/PageLayout";
 import { colors, typography } from "@/app/styles/design-tokens";
 import { getSupabase } from "@/src/lib/supabaseClient";
-import { getSiteUrl } from "@/app/lib/siteUrl";
+import { getEmailRedirectOrigin } from "@/app/lib/siteUrl";
 
 const UCF_EMAIL_SUFFIX = "@ucf.edu";
 
@@ -37,10 +37,12 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       const supabase = getSupabase();
-      const redirectTo = `${getSiteUrl()}/reset-password`;
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-        redirectTo,
-      });
+      const origin = getEmailRedirectOrigin();
+      const redirectTo = origin ? `${origin}/reset-password` : undefined;
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        redirectTo ? { redirectTo } : undefined
+      );
 
       if (resetError) throw resetError;
 

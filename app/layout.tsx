@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import {
   Cormorant_Garamond,
   Geist,
@@ -10,11 +11,13 @@ import {
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import AuthEmailRedirect from "./components/AuthEmailRedirect";
 import { BackgroundGradientAnimation } from "./components/ui/background-gradient-animation";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 const geistSans = Geist({
@@ -72,6 +75,7 @@ export default function RootLayout({
           fontFamily: "var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif",
         }}
       >
+        <AuthEmailRedirect />
         <BackgroundGradientAnimation
           className="min-h-screen flex flex-col"
           interactive={false}
@@ -89,6 +93,7 @@ export default function RootLayout({
           <main className="app-main" style={{ flex: 1 }}>{children}</main>
           <Footer />
         </BackgroundGradientAnimation>
+        <Analytics />
       </body>
     </html>
   );

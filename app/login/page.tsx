@@ -12,7 +12,7 @@ import Card from "@/app/components/ui/Card";
 import PageHeader from "@/app/components/ui/PageHeader";
 import PageLayout from "@/app/components/ui/PageLayout";
 import { colors, typography } from "@/app/styles/design-tokens";
-import { getSiteUrl, AUTH_CALLBACK_PATH } from "@/app/lib/siteUrl";
+import { getEmailRedirectOrigin, AUTH_CALLBACK_PATH } from "@/app/lib/siteUrl";
 
 const UCF_EMAIL_SUFFIX = "@ucf.edu";
 
@@ -130,12 +130,7 @@ function LoginPageContent() {
         if (err) throw err;
         userId = data.user?.id;
       } else {
-        // Prefer runtime origin while developing so callback matches localhost vs 127.0.0.1 correctly.
-        const runtimeOrigin =
-          typeof window !== "undefined" && window.location?.origin
-            ? window.location.origin
-            : "";
-        const siteOrigin = runtimeOrigin || getSiteUrl();
+        const siteOrigin = getEmailRedirectOrigin();
         const redirectTo = siteOrigin ? `${siteOrigin}${AUTH_CALLBACK_PATH}` : undefined;
         const { data, error: err } = await supabase.auth.signUp({
           email: email.trim().toLowerCase(),
@@ -146,7 +141,9 @@ function LoginPageContent() {
         userId = data.user?.id;
         if (!data.session) {
           setMode("in");
-          setNotice("Sign up successful. Check your email to confirm, then sign in.");
+          setNotice(
+            "Sign up successful. Check your email and open the confirmation link — you'll be signed in automatically."
+          );
           setCanResendConfirm(true);
           return;
         }
@@ -175,11 +172,7 @@ function LoginPageContent() {
     setLoading(true);
     try {
       const supabase = getSupabase();
-      const runtimeOrigin =
-        typeof window !== "undefined" && window.location?.origin
-          ? window.location.origin
-          : "";
-      const siteOrigin = runtimeOrigin || getSiteUrl();
+      const siteOrigin = getEmailRedirectOrigin();
       const emailRedirectTo = siteOrigin ? `${siteOrigin}${AUTH_CALLBACK_PATH}` : undefined;
       const { error: resendErr } = await supabase.auth.resend({
         type: "signup",
