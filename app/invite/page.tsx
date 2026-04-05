@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getSupabase } from "@/src/lib/supabaseClient";
 import { useUser } from "@/src/lib/useUser";
 import Section from "@/app/components/ui/Section";
@@ -29,7 +29,7 @@ export default function InvitePage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadInvites = async () => {
+  const loadInvites = useCallback(async () => {
     if (!user) return;
     const { data, error: e } = await getSupabase()
       .from("invites")
@@ -41,15 +41,18 @@ export default function InvitePage() {
       return;
     }
     setInvites((data as InviteRow[]) ?? []);
-  };
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
-      setLoading(false);
+      void Promise.resolve().then(() => setLoading(false));
       return;
     }
-    loadInvites().finally(() => setLoading(false));
-  }, [user]);
+    const t = setTimeout(() => {
+      void loadInvites().finally(() => setLoading(false));
+    }, 0);
+    return () => clearTimeout(t);
+  }, [user, loadInvites]);
 
   const handleCreate = async () => {
     if (!user) return;

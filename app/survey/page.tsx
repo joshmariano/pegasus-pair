@@ -6,16 +6,21 @@ import { useRouter } from "next/navigation";
 import { getSupabase } from "@/src/lib/supabaseClient";
 import { useUser } from "@/src/lib/useUser";
 import { CORE_QUESTIONS, ROMANCE_QUESTIONS } from "@/app/lib/surveyQuestions";
-import { saveSurvey } from "@/app/lib/db";
+import { saveSurvey, generateMatches, fetchInviteUses } from "@/app/lib/db";
+import {
+  isDropLive,
+  isSurveyOpen,
+  getSurveyAvailabilityMessage,
+} from "@/app/lib/matchDrops";
+import { getMatchLimit } from "@/app/lib/matchRewards";
 import Section from "@/app/components/ui/Section";
 import Button from "@/app/components/ui/Button";
 import Card from "@/app/components/ui/Card";
 import PageHeader from "@/app/components/ui/PageHeader";
 import PageLayout from "@/app/components/ui/PageLayout";
+import { RatingInteraction } from "@/app/components/ui/RatingInteraction";
 import { colors, typography } from "@/app/styles/design-tokens";
 import type { SurveyAnswerMap } from "@/app/lib/types";
-
-const SCALE = [1, 2, 3, 4, 5, 6, 7];
 
 export default function SurveyPage() {
   const router = useRouter();
@@ -28,6 +33,12 @@ export default function SurveyPage() {
   const [loadState, setLoadState] = useState<"idle" | "loading" | "done">("idle");
   const [submitState, setSubmitState] = useState<"idle" | "loading" | "error">("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [scheduleNow, setScheduleNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setScheduleNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -52,27 +63,32 @@ export default function SurveyPage() {
 
   useEffect(() => {
     if (!user) return;
-    setLoadState("loading");
-    getSupabase()
-      .from("surveys")
-      .select("core_answers, romance_answers, pool_mode")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        setLoadState("done");
-        if (error) return;
-        const row = data as { core_answers?: SurveyAnswerMap; romance_answers?: SurveyAnswerMap; pool_mode?: string } | null;
-        if (row?.core_answers && typeof row.core_answers === "object") {
-          setCoreAnswers(row.core_answers);
-          setRomanceAnswers(typeof row.romance_answers === "object" ? row.romance_answers ?? {} : {});
-          setPoolMode(row.pool_mode ?? "both");
-          setSubmitted(true);
-          setSuccessMessage("We've got your answers — you're all set.");
-        }
-      });
+    void Promise.resolve().then(() => {
+      setLoadState("loading");
+      return getSupabase()
+        .from("surveys")
+        .select("core_answers, romance_answers, pool_mode")
+        .eq("user_id", user.id)
+        .maybeSingle();
+    }).then((result) => {
+      if (!result) return;
+      const { data, error } = result;
+      setLoadState("done");
+      if (error) return;
+      const row = data as { core_answers?: SurveyAnswerMap; romance_answers?: SurveyAnswerMap; pool_mode?: string } | null;
+      if (row?.core_answers && typeof row.core_answers === "object") {
+        setCoreAnswers(row.core_answers);
+        setRomanceAnswers(typeof row.romance_answers === "object" ? row.romance_answers ?? {} : {});
+        setPoolMode(row.pool_mode ?? "both");
+        setSubmitted(true);
+        setSuccessMessage("We've got your answers — you're all set.");
+      }
+    });
   }, [user]);
 
   const showRomance = poolMode === "romance" || poolMode === "both";
+  const surveyAvail = getSurveyAvailabilityMessage(scheduleNow);
+  const surveyWindowOpen = surveyAvail.open;
   const allCoreAnswered = CORE_QUESTIONS.every((q) => typeof coreAnswers[q.id] === "number");
   const allRomanceAnswered = !showRomance || ROMANCE_QUESTIONS.every((q) => typeof romanceAnswers[q.id] === "number");
   const allAnswered = allCoreAnswered && allRomanceAnswered;
@@ -87,10 +103,16 @@ export default function SurveyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!allAnswered || !user) return;
+    if (!isSurveyOpen(scheduleNow)) {
+      setSubmitError("Survey submissions are closed for this period.");
+      setSubmitState("error");
+      return;
+    }
     setSubmitError(null);
     setSubmitState("loading");
+    const supabase = getSupabase();
     const { error } = await saveSurvey(
-      getSupabase(),
+      supabase,
       user.id,
       coreAnswers,
       romanceAnswers,
@@ -101,7 +123,29 @@ export default function SurveyPage() {
       setSubmitState("error");
       return;
     }
-    setSuccessMessage("Saved! Head to Matches to see who you vibe with.");
+
+    if (isDropLive()) {
+      const { data: inviteUses } = await fetchInviteUses(supabase);
+      const limit = getMatchLimit(inviteUses ?? 0);
+      if (poolMode === "friends" || poolMode === "both") {
+        const { error: genErr } = await generateMatches(supabase, "friends", limit);
+        if (genErr && !genErr.message?.includes("matches_locked")) {
+          console.warn("generateMatches friends:", genErr.message);
+        }
+      }
+      if (poolMode === "romance" || poolMode === "both") {
+        const { error: genErr } = await generateMatches(supabase, "romance", limit);
+        if (genErr && !genErr.message?.includes("matches_locked")) {
+          console.warn("generateMatches romance:", genErr.message);
+        }
+      }
+    }
+
+    setSuccessMessage(
+      isDropLive()
+        ? "Saved! Open Matches to generate or refresh your list while the drop is live."
+        : "Saved! When the match list drops, open Matches to see who you vibe with."
+    );
     setSubmitted(true);
     setSubmitState("idle");
   };
@@ -131,7 +175,11 @@ export default function SurveyPage() {
       <Section>
         <PageHeader
           title={<h1 className="text-center text-3xl font-bold" style={{ fontFamily: typography.fontSerif, color: colors.foreground }}>Matching survey</h1>}
-          subtitle={<p className="text-center text-base" style={{ color: colors.mutedForeground }}>Rate each from 1 (strongly disagree) to 7 (strongly agree).</p>}
+          subtitle={
+            <p className="text-center text-base" style={{ color: colors.mutedForeground }}>
+              Each season has a two-week window to submit. Tap an emoji per line — 1 (strongly disagree) through 7 (strongly agree). After the window closes, we score answers and release matches on the scheduled drop.
+            </p>
+          }
         />
 
         {!user && (
@@ -148,6 +196,18 @@ export default function SurveyPage() {
           </div>
         )}
 
+        {!submitted && !surveyWindowOpen && (
+          <Card glow className="mb-8">
+            <p className="text-center text-base" style={{ color: colors.foreground }}>
+              {surveyAvail.detail}
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Button href="/">Home</Button>
+              <Button variant="secondary" href="/matches">Matches</Button>
+            </div>
+          </Card>
+        )}
+
         {submitted ? (
           <Card glow highlight>
             <p className="text-center text-base" style={{ color: "#86efac" }}>{successMessage}</p>
@@ -155,7 +215,7 @@ export default function SurveyPage() {
               <Button href="/matches">See your matches</Button>
             </div>
           </Card>
-        ) : (
+        ) : surveyWindowOpen ? (
           <form onSubmit={handleSubmit} className="flex flex-col gap-8">
             <p className="text-sm font-medium" style={{ color: colors.mutedForeground }}>Core questions (for both friends & romance)</p>
             {CORE_QUESTIONS.map((q, i) => (
@@ -163,21 +223,10 @@ export default function SurveyPage() {
                 <p className="text-sm font-medium" style={{ color: colors.mutedForeground }}>
                   {i + 1}. {q.prompt}
                 </p>
-                <div className="flex flex-wrap gap-4">
-                  {SCALE.map((n) => (
-                    <label key={n} className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="radio"
-                        name={q.id}
-                        value={n}
-                        checked={coreAnswers[q.id] === n}
-                        onChange={() => handleCoreChange(q.id, n)}
-                        className="h-4 w-4"
-                      />
-                      <span className="text-sm" style={{ color: colors.mutedForeground }}>{n}</span>
-                    </label>
-                  ))}
-                </div>
+                <RatingInteraction
+                  value={typeof coreAnswers[q.id] === "number" ? coreAnswers[q.id] : 0}
+                  onChange={(n) => handleCoreChange(q.id, n)}
+                />
               </Card>
             ))}
 
@@ -189,33 +238,22 @@ export default function SurveyPage() {
                     <p className="text-sm font-medium" style={{ color: colors.mutedForeground }}>
                       {CORE_QUESTIONS.length + i + 1}. {q.prompt}
                     </p>
-                    <div className="flex flex-wrap gap-4">
-                      {SCALE.map((n) => (
-                        <label key={n} className="flex cursor-pointer items-center gap-2">
-                          <input
-                            type="radio"
-                            name={q.id}
-                            value={n}
-                            checked={romanceAnswers[q.id] === n}
-                            onChange={() => handleRomanceChange(q.id, n)}
-                            className="h-4 w-4"
-                          />
-                          <span className="text-sm" style={{ color: colors.mutedForeground }}>{n}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <RatingInteraction
+                      value={typeof romanceAnswers[q.id] === "number" ? romanceAnswers[q.id] : 0}
+                      onChange={(n) => handleRomanceChange(q.id, n)}
+                    />
                   </Card>
                 ))}
               </>
             )}
 
             <div className="flex justify-center">
-              <Button type="submit" disabled={!allAnswered || submitState === "loading"}>
-                {submitState === "loading" ? "Saving…" : "See your matches"}
+              <Button type="submit" disabled={!allAnswered || submitState === "loading" || !surveyWindowOpen}>
+                {submitState === "loading" ? "Saving…" : "Save survey"}
               </Button>
             </div>
           </form>
-        )}
+        ) : null}
       </Section>
     </PageLayout>
   );

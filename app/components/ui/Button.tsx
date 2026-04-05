@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   colors,
-  gradients,
   spacing,
   radius,
   typography,
@@ -36,7 +35,8 @@ function buttonStyle(
   variant: Variant,
   size: Size,
   hover: boolean,
-  disabled: boolean
+  disabled: boolean,
+  pillRadius: boolean
 ) {
   const sizeStyle = sizeMap[size];
   const isPrimary = variant === "primary";
@@ -54,33 +54,56 @@ function buttonStyle(
     lineHeight: typography.lineHeight.normal,
     color: textColor,
     border: borderStyle,
-    borderRadius: radius.xl,
+    borderRadius: pillRadius ? radius.full : radius.xl,
     cursor: disabled ? "not-allowed" : "pointer",
     opacity: disabled ? 0.5 : 1,
     textDecoration: "none",
     display: "inline-block",
     transition: transition.default,
+    transform: "translateY(0px)",
+    filter: "none",
   };
 
   if (isPrimary && !disabled) {
     base.backgroundColor = colors.primary;
+    base.backgroundImage = "none";
     base.border = "none";
     base.boxShadow = hover ? shadow.buttonHover : shadow.button;
     if (hover) {
-      base.background = "linear-gradient(90deg, #fb7185, #f43f5e, #ec4899)";
+      base.backgroundImage =
+        "linear-gradient(90deg, #ff7aa2 0%, #db58aa 52%, rgba(192,132,252,0.92) 100%)";
+      base.transform = "translateY(-1px) scale(1.01)";
+      base.filter = "brightness(1.08)";
     }
   } else if (variant === "secondary") {
     base.backgroundColor = colors.surface;
     base.color = colors.foreground;
     base.backdropFilter = "blur(10px)";
     base.WebkitBackdropFilter = "blur(10px)";
+    if (hover && !disabled) {
+      base.boxShadow = shadow.buttonHover;
+      base.transform = "translateY(-1px) scale(1.01)";
+      base.filter = "brightness(1.06)";
+      base.border = `1px solid ${colors.primary}`;
+    }
   } else if (variant === "ghost") {
     base.backgroundColor = hover && !disabled ? colors.surface : "transparent";
     base.color = colors.foreground;
+    if (hover && !disabled) {
+      base.boxShadow = shadow.buttonHover;
+      base.transform = "translateY(-1px) scale(1.01)";
+      base.filter = "brightness(1.06)";
+      base.border = `1px solid ${colors.primary}`;
+    }
   } else if (variant === "danger") {
     base.backgroundColor = colors.destructive;
     base.border = "none";
     base.boxShadow = shadow.button;
+    if (hover && !disabled) {
+      base.boxShadow = shadow.buttonPrimaryHover;
+      base.transform = "translateY(-1px) scale(1.01)";
+      base.filter = "brightness(1.06)";
+    }
   }
 
   return base;
@@ -97,7 +120,23 @@ export default function Button({
   href,
 }: Props) {
   const [hover, setHover] = useState(false);
-  const style = buttonStyle(variant, size, hover, disabled);
+  const pillRadius = className.includes("home-gold-pill");
+  const homePinkPill = className.includes("home-pink-pill");
+  const style = buttonStyle(variant, size, hover, disabled, pillRadius);
+
+  if (homePinkPill && !disabled) {
+    style.borderRadius = radius.full;
+    style.border = "1px solid rgba(255, 140, 175, 0.35)";
+    style.color = "#fff9fc";
+    style.backgroundColor = "rgba(255, 122, 162, 0.14)";
+    style.backgroundImage =
+      "linear-gradient(135deg, rgba(255,122,162,0.92) 0%, rgba(219,88,170,0.92) 55%, rgba(139,92,246,0.9) 100%)";
+    style.boxShadow = hover
+      ? "0 14px 30px rgba(219,88,170,0.38), 0 0 0 1px rgba(255,140,175,0.3)"
+      : "0 10px 22px rgba(139,92,246,0.2)";
+    style.transform = hover ? "translateY(-1px) scale(1.01)" : "translateY(0)";
+    style.filter = hover ? "brightness(1.06)" : "none";
+  }
 
   if (href && !disabled) {
     return (

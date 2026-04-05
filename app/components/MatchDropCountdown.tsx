@@ -3,19 +3,28 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  colors,
   typography,
   spacing,
   radius,
   shadow,
 } from "@/app/styles/design-tokens";
 import {
-  getNextDrop,
-  getActiveDrop,
+  getDropPhase,
+  getNextCountdownTarget,
   getCountdownParts,
   formatCountdown,
-  getActiveDropEnd,
 } from "@/app/lib/matchDrops";
+
+const DEFAULT_SUBMISSION_COPY =
+  "Names drop two weeks after survey launch.";
+const rose = {
+  timer: "#ffd4e4",
+  cardBg: "rgba(255, 122, 162, 0.11)",
+  cardBorder: "rgba(255, 140, 175, 0.34)",
+  muted: "rgba(255, 236, 244, 0.76)",
+  buttonBg: "linear-gradient(135deg, rgba(255,122,162,0.92) 0%, rgba(219,88,170,0.92) 60%, rgba(139,92,246,0.88) 100%)",
+  buttonFg: "#fff9fc",
+};
 
 /** Inline SVG alarm clock icon with gradient fill. */
 function AlarmIcon() {
@@ -31,9 +40,9 @@ function AlarmIcon() {
     >
       <defs>
         <linearGradient id="clock-icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fb7185" />
-          <stop offset="50%" stopColor="#f43f5e" />
-          <stop offset="100%" stopColor="#8b5cf6" />
+          <stop offset="0%" stopColor="#ff7aa2" />
+          <stop offset="50%" stopColor="#db58aa" />
+          <stop offset="100%" stopColor="#ffffff" />
         </linearGradient>
       </defs>
       <path
@@ -51,21 +60,27 @@ export default function MatchDropCountdown() {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    setNow(new Date());
+    void Promise.resolve().then(() => setNow(new Date()));
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  if (!now) return null;
+  const placeholderTimerString = "00:00:00:00";
 
-  const activeDrop = getActiveDrop(now);
-  const nextDrop = getNextDrop(now);
+  const timerStyle: React.CSSProperties = {
+    fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif",
+    fontVariantNumeric: "tabular-nums",
+    fontWeight: 800,
+    fontSize: "clamp(2.2rem, 6.8vw, 4.5rem)",
+    color: rose.timer,
+    whiteSpace: "nowrap",
+    display: "inline-flex",
+    alignItems: "baseline",
+    letterSpacing: "-0.025em",
+    lineHeight: 1,
+  };
 
-  if (activeDrop) {
-    const endAt = getActiveDropEnd(now);
-    const endParts = endAt ? getCountdownParts(endAt, now) : { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    const endString = formatCountdown(endParts);
-
+  if (!now) {
     return (
       <div
         className="flex flex-col items-center"
@@ -74,122 +89,73 @@ export default function MatchDropCountdown() {
           marginBottom: spacing.xl,
           paddingLeft: spacing.md,
           paddingRight: spacing.md,
-          width: "min(92vw, 38rem)",
-          maxWidth: "100%",
+          width: "100%",
+          maxWidth: "44rem",
+          marginLeft: "auto",
+          marginRight: "auto",
           boxSizing: "border-box",
         }}
       >
         <div
           style={{
-            position: "relative",
             width: "100%",
-            maxWidth: "38rem",
+            maxWidth: "44rem",
             minWidth: 0,
-            background: colors.surfaceStrong,
-            border: `1px solid ${colors.borderStrong}`,
+            background: rose.cardBg,
+            border: `1px solid ${rose.cardBorder}`,
             borderRadius: radius.card,
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            boxShadow: shadow.clockWidget,
             padding: spacing.xl,
-            overflow: "hidden",
           }}
         >
-          <div className="clock-widget-glow" aria-hidden />
-          <div className="flex flex-col items-center gap-3" style={{ position: "relative" }}>
-            <div className="flex items-center justify-center gap-2">
-              <AlarmIcon />
-              <p
-                className="font-medium"
-                style={{
-                  fontSize: typography.fontSize.xs,
-                  color: colors.mutedForeground,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                Live: {activeDrop.label}
-              </p>
-            </div>
-            <p className="text-center font-semibold" style={{ fontSize: typography.fontSize["2xl"], color: colors.primary }}>
-              Drop is live
-            </p>
-            <p className="text-center text-sm" style={{ color: colors.mutedForeground }}>
-              Ends in {endString}
-            </p>
-            <Link
-              href="/matches"
-              className="mt-2 inline-block rounded-lg px-5 py-2.5 font-medium transition-colors"
-              style={{
-                background: colors.primary,
-                color: colors.primaryForeground,
-              }}
-            >
-              View Matches
-            </Link>
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-center font-medium" style={{ color: rose.muted }}>Loading schedule…</p>
+            <span style={{ ...timerStyle }}>{placeholderTimerString}</span>
           </div>
         </div>
       </div>
     );
   }
 
-  if (!nextDrop) {
-    return (
-      <div
-        className="flex flex-col items-center"
-        style={{
-          marginTop: spacing.xl,
-          marginBottom: spacing.xl,
-          paddingLeft: spacing.md,
-          paddingRight: spacing.md,
-          width: "min(92vw, 38rem)",
-          maxWidth: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "38rem",
-            minWidth: 0,
-            background: colors.surfaceStrong,
-            border: `1px solid ${colors.borderStrong}`,
-            borderRadius: radius.card,
-            padding: spacing.xl,
-          }}
-        >
-          <p className="text-center text-sm" style={{ color: colors.mutedForeground }}>
-            Next Match Drop schedule coming soon. Your survey stays saved.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const parts = getCountdownParts(new Date(nextDrop.dropAt), now);
+  const phase = getDropPhase(now);
+  const target = getNextCountdownTarget(now);
+  const countdownTarget =
+    phase.kind === "pre_survey" || phase.kind === "survey_open" || phase.kind === "anticipation"
+      ? {
+          at: new Date(phase.drop.matchRevealAt),
+          title: phase.drop.label,
+          subtitle: "Names drop in",
+        }
+      : target;
+  const parts = countdownTarget ? getCountdownParts(countdownTarget.at, now) : { days: 0, hours: 0, minutes: 0, seconds: 0 };
   const timerString = formatCountdown(parts);
+
+  const showSurveyCta = phase.kind === "survey_open";
+  const showMatchesCta = phase.kind === "matches_live";
 
   return (
     <div
       className="flex flex-col items-center"
       style={{
-        marginTop: spacing.xl,
-        marginBottom: spacing.xl,
+        marginTop: spacing.md,
+        marginBottom: spacing.lg,
         paddingLeft: spacing.md,
         paddingRight: spacing.md,
-        width: "min(92vw, 38rem)",
-        maxWidth: "100%",
+        width: "100%",
+        maxWidth: "44rem",
+        marginLeft: "auto",
+        marginRight: "auto",
         boxSizing: "border-box",
       }}
     >
       <div
+        className="home-card-hover"
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: "38rem",
+          maxWidth: "44rem",
           minWidth: 0,
-          background: colors.surfaceStrong,
-          border: `1px solid ${colors.borderStrong}`,
+          background: rose.cardBg,
+          border: `1px solid ${rose.cardBorder}`,
           borderRadius: radius.card,
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
@@ -206,12 +172,12 @@ export default function MatchDropCountdown() {
               className="font-medium"
               style={{
                 fontSize: typography.fontSize.xs,
-                color: colors.mutedForeground,
+                color: rose.muted,
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
               }}
             >
-              Next: {nextDrop.label}
+              {countdownTarget ? countdownTarget.title : "Pegasus Pair"}
             </p>
           </div>
           <div
@@ -225,29 +191,53 @@ export default function MatchDropCountdown() {
               whiteSpace: "nowrap",
             }}
           >
-            <span
+            <span style={timerStyle}>{countdownTarget ? timerString : placeholderTimerString}</span>
+          </div>
+          <p className="text-center text-sm" style={{ color: rose.muted, maxWidth: "22rem" }}>
+            {countdownTarget ? (
+              <>
+                {countdownTarget.subtitle}
+                {phase.kind === "survey_open" && (
+                  <> · {DEFAULT_SUBMISSION_COPY}</>
+                )}
+                {phase.kind === "pre_survey" && (
+                  <> · {DEFAULT_SUBMISSION_COPY}</>
+                )}
+                {phase.kind === "anticipation" && (
+                  <> · Survey window closed — names release on the scheduled drop.</>
+                )}
+                {phase.kind === "matches_live" && (
+                  <> · Your ranked list is live for a limited time.</>
+                )}
+              </>
+            ) : (
+              "Season schedule will be posted here."
+            )}
+          </p>
+          {showMatchesCta && (
+            <Link
+              href="/matches"
+              className="mt-2 inline-block rounded-lg px-5 py-2.5 font-medium transition-colors"
               style={{
-                fontFamily: typography.fontFamilyClock,
-                fontVariantNumeric: "tabular-nums",
-                fontWeight: typography.fontWeight.semibold,
-                fontSize: "clamp(1.6rem, 5vw, 4rem)",
-                color: colors.foreground,
-                whiteSpace: "nowrap",
-                display: "inline-flex",
-                alignItems: "baseline",
-                letterSpacing: "0.02em",
-                lineHeight: 1,
+                background: rose.buttonBg,
+                color: rose.buttonFg,
               }}
             >
-              {timerString}
-            </span>
-          </div>
-          <p
-            className="text-center text-sm"
-            style={{ color: colors.mutedForeground, maxWidth: "20rem" }}
-          >
-            Matches unlock during drop windows. Your survey stays saved.
-          </p>
+              View matches
+            </Link>
+          )}
+          {showSurveyCta && (
+            <Link
+              href="/survey"
+              className="mt-2 inline-block rounded-lg px-5 py-2.5 font-medium transition-colors"
+              style={{
+                background: rose.buttonBg,
+                color: rose.buttonFg,
+              }}
+            >
+              Take survey
+            </Link>
+          )}
         </div>
       </div>
     </div>

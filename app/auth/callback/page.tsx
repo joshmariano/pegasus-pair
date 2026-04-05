@@ -6,6 +6,7 @@ import { getSupabase } from "@/src/lib/supabaseClient";
 import PageLayout from "@/app/components/ui/PageLayout";
 import Section from "@/app/components/ui/Section";
 import { colors } from "@/app/styles/design-tokens";
+import type { EmailOtpType } from "@supabase/supabase-js";
 
 const PP_NEXT_PATH_KEY = "pp_next_path";
 
@@ -24,11 +25,71 @@ function safeNextPath(next: string | null | undefined): string {
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
+  const [errorText, setErrorText] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
       const supabase = getSupabase();
+
+      // Handle all common Supabase callback formats:
+      // - PKCE: ?code=...
+      // - OTP/email confirm: ?token_hash=...&type=signup
+      // - Legacy hash flow: #access_token=...&refresh_token=...
+      try {
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        const tokenHash = url.searchParams.get("token_hash");
+        const rawType = url.searchParams.get("type");
+        const validTypes: EmailOtpType[] = [
+          "signup",
+          "invite",
+          "magiclink",
+          "recovery",
+          "email_change",
+          "email",
+        ];
+        const otpType = validTypes.includes(rawType as EmailOtpType)
+          ? (rawType as EmailOtpType)
+          : null;
+
+        if (code) {
+          const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
+          if (exErr) {
+            setStatus("error");
+            setErrorText(exErr.message);
+            return;
+          }
+        } else if (tokenHash && otpType) {
+          const { error: otpErr } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: otpType,
+          });
+          if (otpErr) {
+            setStatus("error");
+            setErrorText(otpErr.message);
+            return;
+          }
+        } else if (window.location.hash.includes("access_token")) {
+          const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+          const access_token = hash.get("access_token");
+          const refresh_token = hash.get("refresh_token");
+          if (access_token && refresh_token) {
+            const { error: setErr } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+            if (setErr) {
+              setStatus("error");
+              setErrorText(setErr.message);
+              return;
+            }
+          }
+        }
+      } catch {
+        // fall through to session check
+      }
+
       const {
         data: { session },
         error,
@@ -36,6 +97,7 @@ export default function AuthCallbackPage() {
       if (cancelled) return;
       if (error) {
         setStatus("error");
+        setErrorText(error.message);
         return;
       }
       if (session?.user) {
@@ -62,7 +124,8 @@ export default function AuthCallbackPage() {
         }
         router.replace(destination);
       } else {
-        router.replace("/login");
+        setStatus("error");
+        setErrorText("Could not establish a session from this link. It may be expired or missing redirect settings.");
       }
     };
     run();
@@ -81,7 +144,7 @@ export default function AuthCallbackPage() {
         )}
         {status === "error" && (
           <p className="text-center text-base" style={{ color: colors.destructive }}>
-            Something went wrong. Try <a href="/login" className="underline">logging in</a> again.
+            Something went wrong. {errorText ? `${errorText} ` : ""}Try <a href="/login" className="underline">logging in</a> again.
           </p>
         )}
       </Section>

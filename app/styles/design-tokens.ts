@@ -1,91 +1,100 @@
 /**
- * Design tokens – Lovable romantic gradient-glow + glass UI.
- * Background carries color; surfaces are calm glass/dark.
+ * Design tokens – Professional dark rose/violet theme with subtle glow.
+ * Background/glass is animated via CSS layers (see PageLayout + globals.css).
  */
 
 export const colors = {
-  // Base & surfaces (brighter plum base + light glass)
-  backgroundBase: "#140b1a",
-  background: "#140b1a",
-  surface: "rgba(255, 255, 255, 0.07)",
-  surfaceStrong: "rgba(255, 255, 255, 0.11)",
-  card: "rgba(255, 255, 255, 0.07)",
+  // Base & surfaces (rose-tinted dark)
+  backgroundBase: "#140a18",
+  background: "#140a18",
+  surface: "rgba(255, 255, 255, 0.05)",
+  surfaceStrong: "rgba(255, 255, 255, 0.08)",
+  card: "rgba(255, 255, 255, 0.04)",
   cardForeground: "#f8fafc",
-  // Borders (more visible)
-  border: "rgba(255, 255, 255, 0.14)",
-  borderStrong: "rgba(255, 255, 255, 0.22)",
+
+  // Borders
+  border: "rgba(255, 255, 255, 0.12)",
+  borderStrong: "rgba(255, 255, 255, 0.20)",
+
   // Text
   foreground: "#f8fafc",
   mutedForeground: "rgba(248, 250, 252, 0.72)",
   textPrimary: "#f8fafc",
-  textSecondary: "rgba(248, 250, 252, 0.72)",
-  // Accent palette
-  primary: "#f43f5e",
-  primaryForeground: "#ffffff",
-  secondary: "#fb7185",
-  secondaryForeground: "#ffffff",
-  muted: "rgba(255, 255, 255, 0.11)",
-  accent: "#8b5cf6",
-  accentForeground: "#f5f3ff",
-  peach: "#fb7185",
-  pink: "#ec4899",
+  textSecondary: "rgba(248, 250, 252, 0.70)",
+
+  // Accent palette (rose / violet)
+  primary: "#ff7aa2",
+  primaryForeground: "#fff9fc",
+  secondary: "#f472b6",
+  secondaryForeground: "#fff9fc",
+  muted: "rgba(255, 255, 255, 0.08)",
+  accent: "#db58aa",
+  accentForeground: "#fff9fc",
+  peach: "#ff9ec3",
+  pink: "#ff7aa2",
+
   // Semantic
   destructive: "#ef4444",
   destructiveForeground: "#ffffff",
-  inputBackground: "rgba(255, 255, 255, 0.07)",
-  success: "#16a34a",
-  warning: "#ca8a04",
+  inputBackground: "rgba(255, 255, 255, 0.06)",
+  success: "#22c55e",
+  warning: "#f59e0b",
   danger: "#ef4444",
-  // Glow refs (clock widget, PageLayout, etc.)
-  glowPrimary: "rgba(244, 63, 94, 0.08)",
-  glowAccent: "rgba(139, 92, 246, 0.08)",
-  glowPrimaryStrong: "rgba(244, 63, 94, 0.14)",
-  glowAccentStrong: "rgba(139, 92, 246, 0.14)",
+
+  // Glow refs (rose)
+  glowPrimary: "rgba(255, 122, 162, 0.12)",
+  glowAccent: "rgba(219, 88, 170, 0.10)",
+  glowPrimaryStrong: "rgba(255, 122, 162, 0.20)",
+  glowAccentStrong: "rgba(219, 88, 170, 0.16)",
 } as const;
 
 export const gradients = {
-  /** Lighter dark overlay (less dominance). */
+  /** Dark rose-violet base overlay. */
   pageBackground:
-    "linear-gradient(180deg, rgba(20,11,26,0.55) 0%, rgba(20,11,26,0.35) 35%, rgba(20,11,26,0.55) 100%)",
-  /** Dominant warm wash – brighter, higher alpha. */
+    "linear-gradient(180deg, rgba(20,10,24,0.80) 0%, rgba(20,10,24,0.52) 35%, rgba(20,10,24,0.82) 100%)",
+
+  /** Dominant wash: rose + violet glow with clean depth. */
   colorWash:
-    "linear-gradient(135deg, rgba(251,113,133,0.65) 0%, rgba(244,63,94,0.60) 35%, rgba(236,72,153,0.55) 60%, rgba(139,92,246,0.50) 100%)",
-  /** Hero title gradient. */
+    "linear-gradient(135deg, rgba(255,122,162,0.30) 0%, rgba(219,88,170,0.18) 34%, rgba(139,92,246,0.14) 66%, rgba(20,10,24,0) 100%)",
+
+  /** Hero title gradient (rose to violet). */
   heroTitle:
-    "linear-gradient(90deg, #fb7185 0%, #f43f5e 40%, #ec4899 70%, #8b5cf6 100%)",
-  /** Brand gradient (logo, chips, etc.). */
-  brandGradient:
-    "linear-gradient(135deg, #fb7185 0%, #f43f5e 40%, #8b5cf6 100%)",
-  primaryToAccent:
-    "linear-gradient(135deg, #fb7185 0%, #f43f5e 40%, #8b5cf6 100%)",
-  primaryToAccentBr:
-    "linear-gradient(135deg, #fb7185 0%, #f43f5e 40%, #8b5cf6 100%)",
-  progressAndScores:
-    "linear-gradient(135deg, #fb7185 0%, #f43f5e 40%, #8b5cf6 100%)",
+    "linear-gradient(90deg, #ffd4e4 0%, #ff9ec3 28%, #f472b6 58%, #c084fc 84%, #fde7f1 100%)",
+
+  /** Brand gradients (logo, chips, etc.). */
+  brandGradient: "linear-gradient(135deg, #ff7aa2 0%, #db58aa 50%, #c084fc 100%)",
+  primaryToAccent: "linear-gradient(135deg, #ff7aa2 0%, #db58aa 52%, #c084fc 100%)",
+  primaryToAccentBr: "linear-gradient(135deg, #ff7aa2 0%, #f472b6 40%, #c084fc 100%)",
+  progressAndScores: "linear-gradient(135deg, #ff7aa2 0%, #db58aa 45%, #c084fc 100%)",
+
   /** Radial glows (positioned in PageLayout). */
   glowTop:
-    "radial-gradient(900px circle at 50% -10%, rgba(251,113,133,0.45), transparent 60%)",
+    "radial-gradient(900px circle at 50% -10%, rgba(255,122,162,0.28), transparent 60%)",
   glowRight:
-    "radial-gradient(800px circle at 100% 10%, rgba(139,92,246,0.40), transparent 60%)",
+    "radial-gradient(800px circle at 100% 10%, rgba(219,88,170,0.22), transparent 60%)",
   glowLeft:
-    "radial-gradient(900px circle at 0% 70%, rgba(236,72,153,0.35), transparent 60%)",
+    "radial-gradient(900px circle at 0% 70%, rgba(139,92,246,0.20), transparent 60%)",
   glowBottom:
-    "radial-gradient(900px circle at 50% 110%, rgba(244,63,94,0.25), transparent 60%)",
+    "radial-gradient(900px circle at 50% 110%, rgba(255,122,162,0.18), transparent 60%)",
+
   /** Hero center glow (always on). */
   heroGlowCenter:
-    "radial-gradient(800px circle at 50% 25%, rgba(251,113,133,0.55), transparent 60%)",
-  /** Weaker vignette (don't crush colors). */
+    "radial-gradient(820px circle at 50% 25%, rgba(255,122,162,0.30), transparent 60%)",
+
+  /** Weaker vignette (monochrome). */
   vignette:
-    "radial-gradient(ellipse 85% 85% at 50% 50%, transparent 50%, rgba(20,11,26,0.25) 100%)",
+    "radial-gradient(ellipse 85% 85% at 50% 50%, transparent 48%, rgba(11,11,16,0.45) 100%)",
+
   heroGradient:
-    "radial-gradient(ellipse 90% 60% at 50% -15%, rgba(244, 63, 94, 0.1) 0%, rgba(139, 92, 246, 0.06) 50%, transparent 70%)",
+    "radial-gradient(ellipse 90% 60% at 50% -15%, rgba(255,122,162,0.22) 0%, rgba(255,255,255,0.08) 40%, transparent 70%)",
 } as const;
 
 export const typography = {
   fontFamily: "var(--font-geist-sans), Inter, ui-sans-serif, system-ui, sans-serif",
-  fontSerif: "var(--font-playfair), 'Playfair Display', serif",
+  // Use the same clean stack for headings to keep an Apple-like visual language across pages.
+  fontSerif: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif",
   fontFamilyClock:
-    'var(--font-clock), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif",
   fontSize: {
     xs: "0.75rem",
     sm: "0.875rem",
@@ -140,19 +149,19 @@ export const radius = {
 } as const;
 
 export const shadow = {
-  sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-  md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-  lg: "0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
-  card: "0 10px 30px rgba(0, 0, 0, 0.35)",
+  sm: "0 1px 2px 0 rgb(0 0 0 / 0.45)",
+  md: "0 4px 6px -1px rgb(0 0 0 / 0.55), 0 2px 4px -2px rgb(0 0 0 / 0.55)",
+  lg: "0 10px 15px -3px rgb(0 0 0 / 0.70), 0 4px 6px -4px rgb(0 0 0 / 0.65)",
+  card: "0 14px 40px rgba(0, 0, 0, 0.55)",
   cardGlow:
-    "0 0 0 1px rgba(255,255,255,0.10), 0 20px 60px rgba(244,63,94,0.12)",
-  button: "0 10px 22px rgba(0, 0, 0, 0.35)",
-  buttonHover: "0 14px 30px rgba(0, 0, 0, 0.42)",
-  buttonPrimary: "0 10px 22px rgba(0, 0, 0, 0.35)",
-  buttonPrimaryHover: "0 14px 30px rgba(0, 0, 0, 0.42)",
-  progressFill: "0 10px 15px -3px rgba(244, 63, 94, 0.2)",
-  avatar: "0 10px 15px -3px rgba(244, 63, 94, 0.25)",
-  clockWidget: "0 0 0 1px rgba(255,255,255,0.10), 0 20px 60px rgba(244,63,94,0.12)",
+    "0 0 0 1px rgba(255,255,255,0.10), 0 20px 60px rgba(219,88,170,0.18)",
+  button: "0 10px 22px rgba(0, 0, 0, 0.55)",
+  buttonHover: "0 14px 30px rgba(0, 0, 0, 0.70), 0 0 0 1px rgba(255,122,162,0.26)",
+  buttonPrimary: "0 10px 22px rgba(0, 0, 0, 0.55)",
+  buttonPrimaryHover: "0 14px 30px rgba(0, 0, 0, 0.70), 0 0 0 1px rgba(255,122,162,0.28)",
+  progressFill: "0 10px 15px -3px rgba(219, 88, 170, 0.30)",
+  avatar: "0 10px 15px -3px rgba(255, 122, 162, 0.34)",
+  clockWidget: "0 0 0 1px rgba(255,255,255,0.10), 0 20px 60px rgba(219,88,170,0.18)",
 } as const;
 
 export const transition = {

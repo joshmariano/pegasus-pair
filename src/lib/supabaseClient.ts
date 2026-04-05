@@ -1,38 +1,46 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 let _client: SupabaseClient | null = null;
 
 /**
- * Returns the Supabase client. Throws if env vars are missing (call only on client).
+ * Browser Supabase client singleton.
+ * Uses NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY from .env.local (project root).
+ * Next.js inlines these at compile time — restart `npm run dev` after changing env files.
  */
 export function getSupabase(): SupabaseClient {
   if (_client) return _client;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url =
+    typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string"
+      ? process.env.NEXT_PUBLIC_SUPABASE_URL.trim()
+      : "";
+  const anonKey =
+    typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string"
+      ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.trim()
+      : "";
 
-  // Runtime debugging: log URL fully
-  console.log("[supabaseClient] raw URL:", url);
-  console.log("[supabaseClient] typeof url:", typeof url);
-  console.log("[supabaseClient] url.length:", typeof url === "string" ? url.length : "N/A");
-  console.log("[supabaseClient] url.startsWith('http'):", typeof url === "string" ? url.startsWith("http") : "N/A");
-
-  if (url === undefined || url === null || typeof url !== "string" || url.trim() === "") {
-    throw new Error("Supabase URL not loaded correctly");
+  if (!url) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL. Add it to .env.local in the project root, then restart the dev server (npm run dev)."
+    );
   }
-  if (anonKey === undefined || anonKey === null || typeof anonKey !== "string" || anonKey.trim() === "") {
-    throw new Error("Supabase anon key not loaded correctly");
+  if (!/^https?:\/\//i.test(url)) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL must start with https:// (use the Project URL from Supabase → Settings → API)."
+    );
   }
-
-  const urlTrimmed = url.trim();
-  const anonKeyTrimmed = anonKey.trim();
+  if (!anonKey) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_SUPABASE_ANON_KEY. Add it to .env.local in the project root, then restart the dev server (npm run dev)."
+    );
+  }
 
   try {
-    console.log("[supabaseClient] createClient called with url:", urlTrimmed, "anonKey length:", anonKeyTrimmed.length);
-    _client = createClient(urlTrimmed, anonKeyTrimmed);
+    _client = createBrowserClient(url, anonKey);
     return _client;
   } catch (err) {
-    console.error("[supabaseClient] createClient failed. url:", urlTrimmed, "anonKey length:", anonKeyTrimmed.length, "error:", err);
+    console.error("[supabase] createClient failed:", err);
     throw err;
   }
 }

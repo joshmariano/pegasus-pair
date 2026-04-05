@@ -16,7 +16,6 @@ export function useUser(): {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setError(null);
     const supabase = getSupabase();
 
     const loadSession = async () => {
@@ -31,7 +30,13 @@ export function useUser(): {
       setLoading(false);
     };
 
-    loadSession();
+    void Promise.resolve()
+      .then(() => {
+        setError(null);
+      })
+      .then(() => {
+        void loadSession();
+      });
 
     const {
       data: { subscription },

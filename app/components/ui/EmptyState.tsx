@@ -4,7 +4,7 @@ import { colors, typography, spacing } from "@/app/styles/design-tokens";
 
 type Props = {
   title: string;
-  support?: string;
+  support?: React.ReactNode;
   action?: React.ReactNode;
   icon?: React.ReactNode;
 };
@@ -40,8 +40,8 @@ export default function EmptyState({ title, support, action, icon }: Props) {
       >
         {title}
       </h3>
-      {support && (
-        <p
+      {support != null && support !== "" && (
+        <div
           style={{
             fontSize: typography.fontSize.sm,
             color: colors.mutedForeground,
@@ -52,7 +52,7 @@ export default function EmptyState({ title, support, action, icon }: Props) {
           }}
         >
           {support}
-        </p>
+        </div>
       )}
       {action && <div>{action}</div>}
     </div>

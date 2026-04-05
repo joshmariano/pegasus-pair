@@ -38,10 +38,10 @@ export default function PegasusLogo({
           y2="64"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0%" stopColor="#fb7185" />
-          <stop offset="40%" stopColor="#f43f5e" />
-          <stop offset="75%" stopColor="#ec4899" />
-          <stop offset="100%" stopColor="#8b5cf6" />
+          <stop offset="0%" stopColor="#ff7aa2" />
+          <stop offset="40%" stopColor="#db58aa" />
+          <stop offset="75%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#c084fc" />
         </linearGradient>
       </defs>
       {/* One wing: base at right, tip at top-left; trailing edge scalloped */}

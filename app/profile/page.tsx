@@ -12,7 +12,7 @@ import Card from "@/app/components/ui/Card";
 import Chip from "@/app/components/ui/Chip";
 import PageHeader from "@/app/components/ui/PageHeader";
 import PageLayout from "@/app/components/ui/PageLayout";
-import { colors, spacing, radius, typography } from "@/app/styles/design-tokens";
+import { colors, typography } from "@/app/styles/design-tokens";
 
 const CONTACT_METHODS = [
   { value: "", label: "— Pick one —" },
@@ -61,12 +61,12 @@ const labelStyle = {
 
 const inputLikeStyle = {
   width: "100%",
-  padding: "0.75rem 1rem",
+  padding: "0.84rem 1rem",
   fontSize: typography.fontSize.base,
   color: colors.foreground,
-  backgroundColor: colors.inputBackground,
-  border: `1px solid ${colors.border}`,
-  borderRadius: radius.input,
+  background: "linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.045) 100%)",
+  border: "1px solid rgba(255, 196, 219, 0.24)",
+  borderRadius: "1rem",
 };
 
 type ProfileRow = {
@@ -103,30 +103,33 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    setLoadState("loading");
-    getSupabase()
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data, error: e }) => {
-        setLoadState("done");
-        if (e) return;
-        const p = data as ProfileRow | null;
-        if (p) {
-          setDisplayName(p.display_name);
-          setMajor(p.major ?? "");
-          setYear(p.year ?? "");
-          setBio(p.bio ?? "");
-          setContactMethod(p.contact_method ?? "");
-          setContactValue(p.contact_value ?? "");
-          setGender(p.gender ?? "");
-          setSexuality(p.sexuality ?? "");
-          setPoolMode(p.pool_mode ?? "both");
-          setDesiredGenders(Array.isArray(p.romance_preferences?.desired_genders) ? p.romance_preferences.desired_genders : []);
-          setDesiredSexualities(Array.isArray(p.romance_preferences?.desired_sexualities) ? p.romance_preferences.desired_sexualities : []);
-        }
-      });
+    void Promise.resolve().then(() => {
+      setLoadState("loading");
+      return getSupabase()
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+    }).then((result) => {
+      if (!result) return;
+      const { data, error: e } = result;
+      setLoadState("done");
+      if (e) return;
+      const p = data as ProfileRow | null;
+      if (p) {
+        setDisplayName(p.display_name);
+        setMajor(p.major ?? "");
+        setYear(p.year ?? "");
+        setBio(p.bio ?? "");
+        setContactMethod(p.contact_method ?? "");
+        setContactValue(p.contact_value ?? "");
+        setGender(p.gender ?? "");
+        setSexuality(p.sexuality ?? "");
+        setPoolMode(p.pool_mode ?? "both");
+        setDesiredGenders(Array.isArray(p.romance_preferences?.desired_genders) ? p.romance_preferences.desired_genders : []);
+        setDesiredSexualities(Array.isArray(p.romance_preferences?.desired_sexualities) ? p.romance_preferences.desired_sexualities : []);
+      }
+    });
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {

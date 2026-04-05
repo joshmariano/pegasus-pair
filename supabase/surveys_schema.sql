@@ -1,6 +1,7 @@
 -- ============================================================
 -- Pegasus Pair: surveys table (core + romance answers, pool_mode)
 -- ============================================================
+-- Requires public.is_survey_open() from match_drops_schema.sql (run that first).
 -- One row per user. core_answers and romance_answers keyed by question id, value 1..7.
 
 create table if not exists public.surveys (
@@ -20,13 +21,13 @@ alter table public.surveys enable row level security;
 drop policy if exists "Users can insert own survey" on public.surveys;
 create policy "Users can insert own survey"
   on public.surveys for insert to authenticated
-  with check (auth.uid() = user_id);
+  with check (auth.uid() = user_id and public.is_survey_open());
 
 drop policy if exists "Users can update own survey" on public.surveys;
 create policy "Users can update own survey"
   on public.surveys for update to authenticated
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (auth.uid() = user_id and public.is_survey_open())
+  with check (auth.uid() = user_id and public.is_survey_open());
 
 drop policy if exists "Users can read own survey" on public.surveys;
 create policy "Users can read own survey"

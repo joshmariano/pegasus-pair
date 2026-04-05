@@ -1,7 +1,5 @@
 "use client";
 
-import { colors, gradients } from "@/app/styles/design-tokens";
-
 type Props = {
   children: React.ReactNode;
   className?: string;
@@ -16,129 +14,23 @@ type Props = {
 export default function PageLayout({
   children,
   className = "",
-  glow = true,
-  glowBottomLeft,
-  glowTopRight,
+  glow: _glow = true,
+  glowBottomLeft: _glowBottomLeft,
+  glowTopRight: _glowTopRight,
 }: Props) {
+  void _glow;
+  void _glowBottomLeft;
+  void _glowTopRight;
+
   return (
     <div
-      className={`grain-overlay ${className}`.trim()}
+      className={className}
       style={{
         minHeight: "100vh",
         position: "relative",
-        overflowX: "hidden",
-        overflowY: "visible",
-        maxWidth: "100%",
-        background: colors.backgroundBase,
       }}
     >
-      {/* Glow layers: overflow-hidden wrapper + pointer-events: none to avoid scroll/zoom glitches */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 0,
-          overflow: "hidden",
-          pointerEvents: "none",
-        }}
-      >
-        {/* B) Dominant warm color wash */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: gradients.colorWash,
-          }}
-        />
-        {/* C) Hero center glow (always) */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: gradients.heroGlowCenter,
-          }}
-        />
-        {/* D) Radial glows – top, right, left */}
-        {glow && (
-          <>
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: gradients.glowTop,
-              }}
-            />
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: gradients.glowRight,
-              }}
-            />
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: gradients.glowLeft,
-              }}
-            />
-          </>
-        )}
-        {glowTopRight && (
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: gradients.glowRight,
-            }}
-          />
-        )}
-        {(glowBottomLeft ?? false) && (
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: gradients.glowBottom,
-            }}
-          />
-        )}
-        {/* E) Light dark overlay (readability, less dominance) */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: gradients.pageBackground,
-          }}
-        />
-        {/* F) Subtle vignette only */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: gradients.vignette,
-          }}
-        />
-      </div>
-      {/* Content */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          overflow: "visible",
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

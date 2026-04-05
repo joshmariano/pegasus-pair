@@ -25,8 +25,8 @@ export default function Section({
         marginRight: "auto",
         paddingLeft: spacing.sectionX,
         paddingRight: spacing.sectionX,
-        paddingTop: spacing.sectionY,
-        paddingBottom: spacing.sectionY,
+        paddingTop: "clamp(1.15rem, 3.3vw, 2rem)",
+        paddingBottom: "clamp(1.15rem, 3.3vw, 2rem)",
         ...styleOverride,
       }}
     >

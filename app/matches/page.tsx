@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/src/lib/useUser";
 import { getSupabase } from "@/src/lib/supabaseClient";
 import { fetchMatches, generateMatches, fetchInviteUses } from "@/app/lib/db";
-import { isDropLive, getNextDrop, getCountdownParts, formatCountdown } from "@/app/lib/matchDrops";
+import { isDropLive, getLockedMatchesBlurb } from "@/app/lib/matchDrops";
 import {
   BASE_MATCH_LIMIT,
   BONUS_PER_INVITE,
@@ -53,8 +53,8 @@ export default function MatchesPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [lockError, setLockError] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState<Set<string>>(new Set());
-  const [dropLive, setDropLive] = useState<boolean>(false);
-  const [countdownNow, setCountdownNow] = useState<Date>(() => new Date());
+  const [dropLive, setDropLive] = useState(() => isDropLive());
+  const [countdownNow, setCountdownNow] = useState(() => new Date());
   const [inviteUses, setInviteUses] = useState<number>(0);
 
   const loadProfileAndSurvey = useCallback(async () => {
@@ -110,11 +110,13 @@ export default function MatchesPage() {
 
   useEffect(() => {
     if (!user) return;
-    loadProfileAndSurvey();
+    const t = setTimeout(() => {
+      void loadProfileAndSurvey();
+    }, 0);
+    return () => clearTimeout(t);
   }, [user, loadProfileAndSurvey]);
 
   useEffect(() => {
-    setDropLive(isDropLive());
     const id = setInterval(() => {
       setCountdownNow(new Date());
       setDropLive(isDropLive());
@@ -124,7 +126,10 @@ export default function MatchesPage() {
 
   useEffect(() => {
     if (!user || hasSurvey === null || !dropLive) return;
-    loadMatches();
+    const t = setTimeout(() => {
+      void loadMatches();
+    }, 0);
+    return () => clearTimeout(t);
   }, [user, hasSurvey, activePool, dropLive, loadMatches]);
 
   useEffect(() => {
@@ -160,10 +165,7 @@ export default function MatchesPage() {
   };
 
   const showRomanceTab = poolMode === "romance" || poolMode === "both";
-  const nextDrop = getNextDrop(countdownNow);
-  const countdownStr = nextDrop
-    ? formatCountdown(getCountdownParts(new Date(nextDrop.dropAt), countdownNow))
-    : "—";
+  const { countdownStr, detail: lockedDetail } = getLockedMatchesBlurb(countdownNow);
 
   if (authLoading) {
     return (
@@ -206,12 +208,17 @@ export default function MatchesPage() {
         {!dropLive && user && (
           <Card glow className="mb-8">
             <EmptyState
-              title="Matches are locked"
-              support={`Next drop in ${countdownStr}. Because the right match is worth waiting for. Invite friends now to unlock more matches on drop day.`}
+              title="Match list isn’t live yet"
+              support={
+                <>
+                  <span className="block">{lockedDetail}</span>
+                  <span className="mt-2 block text-sm opacity-90">Timer: {countdownStr}</span>
+                </>
+              }
               action={
                 <div className="flex flex-wrap justify-center gap-3">
                   <Button href="/invite">Invite friends</Button>
-                  <Button variant="secondary" href="/survey">Update survey</Button>
+                  <Button variant="secondary" href="/survey">Survey</Button>
                 </div>
               }
             />
@@ -291,7 +298,7 @@ export default function MatchesPage() {
                 You get {BASE_MATCH_LIMIT} matches per drop. Each successful invite adds +{BONUS_PER_INVITE} (up to {MAX_BONUS_INVITES} invites).
               </p>
               <p className="text-sm mb-3" style={{ color: colors.foreground }}>
-                You've earned +{getInviteProgress(inviteUses).extraMatches} extra matches ({getInviteProgress(inviteUses).inviteUsesCapped} invites). Total this drop: {getInviteProgress(inviteUses).totalMatches}.
+                You&apos;ve earned +{getInviteProgress(inviteUses).extraMatches} extra matches ({getInviteProgress(inviteUses).inviteUsesCapped} invites). Total this drop: {getInviteProgress(inviteUses).totalMatches}.
               </p>
               <Button variant="secondary" href="/invite" size="sm">Invite friends</Button>
             </Card>

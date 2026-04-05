@@ -154,15 +154,14 @@ declare
   my_survey record;
   my_profile record;
   cand record;
-  comp record;
   score_val numeric;
   reasons_val jsonb;
   use_romance boolean;
   desired_genders text[];
   desired_sexualities text[];
   candidate_ok boolean;
-  inserted int := 0;
   effective_limit int;
+  my_pool text;
 begin
   if me is null then return; end if;
   if pool_param is null or pool_param not in ('friends','romance') then return; end if;
@@ -179,6 +178,10 @@ begin
     return;
   end if;
 
+  my_pool := coalesce(my_survey.pool_mode, 'both');
+  if pool_param = 'friends' and my_pool not in ('friends','both') then return; end if;
+  if pool_param = 'romance' and my_pool not in ('romance','both') then return; end if;
+
   select p.gender, p.sexuality, p.romance_preferences
     into my_profile from public.profiles p where p.user_id = me;
 
@@ -190,17 +193,26 @@ begin
     (select array_agg(x::text) from jsonb_array_elements_text(coalesce(my_profile.romance_preferences->'desired_sexualities', '[]'::jsonb)) x),
     array[]::text[]);
 
-  delete from public.matches where user_id = me and pool = pool_param;
+  -- Score every eligible candidate, then keep the top effective_limit by compatibility (not "most recently updated").
+  drop table if exists _pegasus_match_scores;
+  create temp table _pegasus_match_scores (
+    match_user_id uuid primary key,
+    score numeric not null,
+    reasons jsonb not null
+  );
 
   for cand in
-    select s.user_id, s.core_answers, s.romance_answers, p.gender, p.sexuality, p.romance_preferences
+    select s.user_id, s.pool_mode, s.core_answers, s.romance_answers, p.gender, p.sexuality, p.romance_preferences
     from public.surveys s
     join public.profiles p on p.user_id = s.user_id
     where s.user_id != me
       and s.core_answers is not null
       and jsonb_typeof(s.core_answers) = 'object'
-    order by s.updated_at desc nulls last
-    limit 500
+      and (
+        (pool_param = 'friends' and coalesce(s.pool_mode, 'both') in ('friends','both'))
+        or
+        (pool_param = 'romance' and coalesce(s.pool_mode, 'both') in ('romance','both'))
+      )
   loop
     candidate_ok := true;
     if pool_param = 'romance' then
@@ -237,13 +249,19 @@ begin
       use_romance
     ) c;
 
-    insert into public.matches (user_id, match_user_id, pool, score, reasons)
-    values (me, cand.user_id, pool_param, score_val, reasons_val)
-    on conflict (user_id, match_user_id, pool) do update set score = excluded.score, reasons = excluded.reasons;
-
-    inserted := inserted + 1;
-    if inserted >= effective_limit then exit; end if;
+    insert into _pegasus_match_scores (match_user_id, score, reasons)
+    values (cand.user_id, score_val, reasons_val);
   end loop;
+
+  delete from public.matches where user_id = me and pool = pool_param;
+
+  insert into public.matches (user_id, match_user_id, pool, score, reasons)
+  select me, match_user_id, pool_param, score, reasons
+  from _pegasus_match_scores
+  order by score desc, match_user_id asc
+  limit effective_limit;
+
+  drop table if exists _pegasus_match_scores;
 end;
 $$;
 
